@@ -1,0 +1,7 @@
+*.pyc
+*.*project
+*.*egg*.*
+build/
+Detection.egg-info/
+dist/
+src/
