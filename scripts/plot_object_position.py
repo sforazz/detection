@@ -4,6 +4,7 @@ import numpy as np
 import cv2
 import matplotlib
 import argparse
+import os
 from detection.tracking import tracking
 
 
@@ -31,6 +32,7 @@ def plot_box_coordinates(video, coordinates_file, xlabels=[],
         xpos = [int(x.strip()) for x in f]
     
     if xpos:
+        plot_name = coordinates_file.split('.txt')[0]+'.png'
         captured_video = cv2.VideoCapture(video)
     
         video_len = get_length(captured_video)
@@ -58,7 +60,7 @@ def plot_box_coordinates(video, coordinates_file, xlabels=[],
         xpos = [np.abs(x-frame_len_pixel) for x in xpos]
         
         bins = np.linspace(0, frame_len_pixel, n_bins)
-        _, ax = plot.subplots()
+        _, ax = plot.subplots(figsize=(30, 15))
         hist = ax.hist(xpos, bins)
         
         yticks = np.linspace(0, max(hist[0]), 10)
@@ -88,9 +90,12 @@ def plot_box_coordinates(video, coordinates_file, xlabels=[],
         plot.xlabel("Temperature [C°]")
         plot.ylabel("Time spent [seconds]")
         
+        plot.savefig(plot_name)
         plot.show()
+
     else:
         print('[INFO] the coordinates file is empty. Nothing to plot.')
+        os.remove(coordinates_file)
 
 
 def main():
@@ -99,7 +104,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("-v", "--video", type=str,
         help="path to input video file")
-    ap.add_argument("-t", "--tracker", type=str, default="kcf",
+    ap.add_argument("-t", "--tracker", type=str, default="csrt",
         help="OpenCV object tracker type")
     ap.add_argument("-r", "--resample", type=int,
         help=("Width, in pixels, that will be used to resample the input video."
