@@ -6,6 +6,7 @@ import matplotlib
 import argparse
 import os
 from detection.tracking import tracking
+from scipy.interpolate import interp1d
 
 
 font = {'weight' : 'bold',
@@ -58,6 +59,7 @@ def plot_box_coordinates(video, coordinates_file, xlabels=[],
         
         #need this to revert the temperature along x to go from Tmin to Tmax
         xpos = [np.abs(x-frame_len_pixel) for x in xpos]
+        median_xpos = np.median(xpos)
         
         bins = np.linspace(0, frame_len_pixel, n_bins)
         _, ax = plot.subplots(figsize=(30, 15))
@@ -67,6 +69,9 @@ def plot_box_coordinates(video, coordinates_file, xlabels=[],
         ytick_labels = (yticks*seconds_x_frame).astype(int)
         ax.set_yticks(yticks)
         ax.set_yticklabels(ytick_labels)
+
+        text_ypos = np.percentile(hist[0], 99)
+        text_xpos = np.percentile(xpos, 100)
         
         # chage the labels each time based on infrared camera reading!!!
     #     xmax = np.abs(102-frame_len_pixel)
@@ -75,9 +80,13 @@ def plot_box_coordinates(video, coordinates_file, xlabels=[],
     #         xtick_labels = [22.5, 24.6, 26.3, 27.7, 29.5, 31, 35.4, 38.5, 44, 50, 52, 56]
             xtick_labels = xlabels
             xticks = np.linspace(0, frame_len_pixel, len(xlabels))
+            mapping_function = interp1d(xticks, xtick_labels)
             # xtick_labels.reverse()
             ax.set_xticks(xticks)
             ax.set_xticklabels(xtick_labels)
+            median_xpos = float(mapping_function(median_xpos))
+
+            
         
         cm = plot.cm.get_cmap('RdYlBu_r')
         bin_centers = 0.5 * (hist[1][:-1] + hist[1][1:])
@@ -87,6 +96,7 @@ def plot_box_coordinates(video, coordinates_file, xlabels=[],
         for c, p in zip(col, hist[2]):
             plot.setp(p, 'facecolor', cm(c))
         
+        plot.text(text_xpos, text_ypos, r'median value: {:.2f}'.format(median_xpos))
         plot.xlabel("Temperature [C°]")
         plot.ylabel("Time spent [seconds]")
         
