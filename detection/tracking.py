@@ -8,6 +8,7 @@ import argparse
 import imutils
 import datetime
 import cv2
+from .utils import utilsVideo
 
 
 def tracking(video, tracker_name='csrt', resample=None, save_box_center=True):
@@ -44,6 +45,10 @@ def tracking(video, tracker_name='csrt', resample=None, save_box_center=True):
     initBB = None
 
     vs = cv2.VideoCapture(video)
+    uv = utilsVideo(vs)
+    (fps,frame_count,durationSec) = uv.getStats()
+    print ("Total time: {}sec FrameRate: {} FrameCount: {}"
+           .format(durationSec, fps, frame_count))
 
     # initialize the FPS throughput estimator
     fps = None
@@ -102,6 +107,7 @@ def tracking(video, tracker_name='csrt', resample=None, save_box_center=True):
         # show the output frame
         cv2.namedWindow('Frame', cv2.WINDOW_NORMAL)
         cv2.resizeWindow('Frame', 2000, 1000)
+        frame = uv.displayProgressBar(frame)
         cv2.imshow("Frame", frame)
         key = cv2.waitKey(t) & 0xFF
     
