@@ -104,6 +104,14 @@ def plot_box_coordinates(video, coordinates_file, xlabels=[],
                                  'piecewise_constant')
                 np.savetxt(hist_counts_ref_name, hist_ref*seconds_x_frame)
                 np.savetxt(hist_bins_ref_name, bins_label_ref)
+            else:
+                hist_counts_name = (coordinates_file.split('.txt')[0]+
+                                        '_histogram_counts.txt')
+                hist_bins_name = (coordinates_file.split('.txt')[0]+
+                                      '_histogram_bins.txt')
+                bins_label = np.asarray([float(mapping_function(x)) for x in bins])
+                np.savetxt(hist_counts_name, hist[0]*seconds_x_frame)
+                np.savetxt(hist_bins_name, bins_label)
 
             
         
@@ -201,7 +209,8 @@ def main():
         seconds_to_plot = args["seconds_to_plot"]
 
     plot_box_coordinates(args["video"], coordinates, xlabels=args['xlabel'],
-                         seconds_to_plot=seconds_to_plot)
+                         seconds_to_plot=seconds_to_plot,
+                         rebinning=args["rebinning"])
 
     print('Done')
 
