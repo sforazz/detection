@@ -7,6 +7,8 @@ import argparse
 import os
 from detection.tracking import tracking
 from scipy.interpolate import interp1d
+from detection.utils import rebin
+import glob
 
 
 font = {'weight' : 'bold',
@@ -15,6 +17,8 @@ font = {'weight' : 'bold',
 matplotlib.rc('font', **font)
 
 FRAME_LEN_CM = 110 #lenght of the metal bar seen in the video
+XLABELS_REF = [22.5, 24.6, 26.3, 27.7, 29.5, 31, 35.4, 38.5, 44, 50, 52, 56]
+# XLABELS_REF = [19, 20, 21, 23, 24.5, 26.5, 29, 31, 37, 43, 52, 55]
 
 
 def get_length(cap):
@@ -27,7 +31,7 @@ def get_length(cap):
 
 
 def plot_box_coordinates(video, coordinates_file, xlabels=[],
-                         seconds_to_plot=None):
+                         seconds_to_plot=None, rebinning=True):
     
     with open(coordinates_file, 'r') as f: 
         xpos = [int(x.strip()) for x in f]
@@ -85,6 +89,21 @@ def plot_box_coordinates(video, coordinates_file, xlabels=[],
             ax.set_xticks(xticks)
             ax.set_xticklabels(xtick_labels)
             median_xpos = float(mapping_function(median_xpos))
+            print('[INFO] The median value along x is {}.'.format(median_xpos))
+            if rebinning:
+                plot_name_ref = coordinates_file.split('.txt')[0]+'_rebinned2ref.png'
+                hist_counts_ref_name = (coordinates_file.split('.txt')[0]+
+                                        '_histogram_counts_rebinned2ref.txt')
+                hist_bins_ref_name = (coordinates_file.split('.txt')[0]+
+                                      '_histogram_bins_rebinned2ref.txt')
+                bins_label = np.asarray([float(mapping_function(x)) for x in bins])
+                xtick_labels_ref = XLABELS_REF
+                mapping_function_ref = interp1d(xticks, xtick_labels_ref)
+                bins_label_ref = np.asarray([float(mapping_function_ref(x)) for x in bins])
+                hist_ref = rebin(bins_label, hist[0], bins_label_ref,
+                                 'piecewise_constant')
+                np.savetxt(hist_counts_ref_name, hist_ref*seconds_x_frame)
+                np.savetxt(hist_bins_ref_name, bins_label_ref)
 
             
         
@@ -102,6 +121,26 @@ def plot_box_coordinates(video, coordinates_file, xlabels=[],
         
         plot.savefig(plot_name)
         plot.show()
+        plot.close()
+        if rebinning:
+            _, ax = plot.subplots(figsize=(30, 15))
+            bar = ax.hist(bins_label_ref[:-1], bins=bins_label_ref,
+                          weights=hist_ref)
+            yticks = np.linspace(0, max(bar[0]), 10)
+            ytick_labels = (yticks*seconds_x_frame).astype(int)
+            ax.set_yticks(yticks)
+            ax.set_yticklabels(ytick_labels)
+            cm = plot.cm.get_cmap('RdYlBu_r')
+            bin_centers = 0.5 * np.asarray(
+                (bar[1][:-1] + bar[1][1:]))
+            col = bin_centers - min(bin_centers)
+            col /= max(col)
+            for c, p in zip(col, bar[2]):
+                plot.setp(p, 'facecolor', cm(c))
+            plot.xlabel("Temperature [C°]")
+            plot.ylabel("Time spent [seconds]")
+            plot.savefig(plot_name_ref)
+            plot.show()
 
     else:
         print('[INFO] the coordinates file is empty. Nothing to plot.')
@@ -119,9 +158,10 @@ def main():
     ap.add_argument("-r", "--resample", type=int,
         help=("Width, in pixels, that will be used to resample the input video."
               " By default is not resampled."))
-    ap.add_argument("-s", "--save_box_coordinates", action='store_true',
-        help=("Whether or not to save the x coordinates of each detected "
-              "box to file. Default is False."))
+    ap.add_argument("--rebinning", action='store_true',
+        help=("Whether or not to rebin the histogram to a reference binning scheme"
+              "N.B. In this case it assumes the --xlabel is provided and contains "
+              "temperature values. Default is False."))
     ap.add_argument("-cf", "--coordinates_file", type=str,
         help="path to the text file with the coordinates of the detected box from a previuos "
         "tracking.")
@@ -145,6 +185,15 @@ def main():
                                save_box_center=True)
     else:
         coordinates = args["coordinates_file"]
+        if not args.get("video", False):
+            basename = args["coordinates_file"].split('_box')[0]
+            try:
+                args["video"] = glob.glob(basename+'.*')[0]
+                print(args["video"])
+            except IndexError:
+                raise Exception(
+                    'Video file was not provided and could not be found in the'
+                    ' folder of the coordinates file. You must provied it!')
     
     if not args.get("seconds_to_plot", False):
         seconds_to_plot = None
