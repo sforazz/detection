@@ -18,7 +18,8 @@ setup(name='Detection',
       'scipy==1.5.2'],
       entry_points={
           'console_scripts': ['plot_object_position = scripts.plot_object_position:main',
-			      'histogram_average = scripts.histogram_averaging:main']},
+			      'histogram_average = scripts.histogram_averaging:main',
+			      'position2temperature = scripts.position2temperature:main']},
       packages=find_packages(exclude=['*.tests', '*.tests.*', 'tests.*', 'tests']),
       classifiers=[
           'Intended Audience :: Science/Research',

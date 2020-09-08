@@ -63,9 +63,17 @@ def plot_box_coordinates(video, coordinates_file, xlabels=[],
         
         #need this to revert the temperature along x to go from Tmin to Tmax
         xpos = [np.abs(x-frame_len_pixel) for x in xpos]
+#         if xlabels:
+#             xtick_labels = xlabels
+#             xticks = np.linspace(0, frame_len_pixel, len(xlabels))
+#             mapping_function = interp1d(xticks, xtick_labels)
+#             xpos = [float(mapping_function(x)) for x in xpos]
+#             bins = np.linspace(np.min(xlabels), np.max(xlabels), n_bins)
+#         else:
+        bins = np.linspace(0, frame_len_pixel, n_bins)
         median_xpos = np.median(xpos)
         
-        bins = np.linspace(0, frame_len_pixel, n_bins)
+        
         _, ax = plot.subplots(figsize=(30, 15))
         hist = ax.hist(xpos, bins)
         
