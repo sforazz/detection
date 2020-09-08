@@ -17,7 +17,8 @@ setup(name='Detection',
       'opencv-contrib-python==4.3.0.36',
       'scipy==1.5.2'],
       entry_points={
-          'console_scripts': ['plot_object_position = scripts.plot_object_position:main']},
+          'console_scripts': ['plot_object_position = scripts.plot_object_position:main',
+			      'histogram_average = scripts.histogram_averaging:main']},
       packages=find_packages(exclude=['*.tests', '*.tests.*', 'tests.*', 'tests']),
       classifiers=[
           'Intended Audience :: Science/Research',
