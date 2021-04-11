@@ -55,8 +55,8 @@ def tracking(video, tracker_name='csrt', resample=None, save_box_center=True):
 
     # loop over frames from the video stream
     xpos = []
-    current_time = datetime.datetime.now().strftime('%Y_%m_%d_%H:%M:%S')
-    file_name = video.split('.m4v')[0]+'_box_x_coordinates_{}.txt'.format(
+    current_time = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
+    file_name = video.split('.mov')[0]+'_box_x_coordinates_{}.txt'.format(
         current_time)
     while True:
         # grab the current frame, then handle if we are using a
